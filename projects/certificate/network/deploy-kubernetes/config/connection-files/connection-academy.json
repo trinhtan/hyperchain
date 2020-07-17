@@ -1,0 +1,67 @@
+{
+  "name": "network-academy",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Academy",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "certificatechannel": {
+      "orderers": ["certificate-orderer"],
+      "peers": {
+        "certificate-academy-peer0": {}      
+      }
+    }
+  },
+  "organizations": {
+    "Academy": {
+      "mspid": "AcademyMSP",
+      "peers": [
+        "certificate-academy-peer0"      
+			],
+      "certificateAuthorities": ["certificate-academy-ca"]
+    }
+  },
+  "peers": {
+    "certificate-academy-peer0": {
+      "url": "grpc://192.168.99.100:30000",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICdjCCAhygAwIBAgIRAJvFLhnIZOWH0rjBDWmFj5cwCgYIKoZIzj0EAwIwgYQx\nCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4g\nRnJhbmNpc2NvMSAwHgYDVQQKExdhY2FkZW15LmNlcnRpZmljYXRlLmNvbTEmMCQG\nA1UEAxMddGxzY2EuYWNhZGVteS5jZXJ0aWZpY2F0ZS5jb20wHhcNMjAwNzEwMDUw\nOTAwWhcNMzAwNzA4MDUwOTAwWjCBhDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNh\nbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xIDAeBgNVBAoTF2FjYWRl\nbXkuY2VydGlmaWNhdGUuY29tMSYwJAYDVQQDEx10bHNjYS5hY2FkZW15LmNlcnRp\nZmljYXRlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABBjcm1E8yv4IhxYY\n2rZ+MYHYqilCGKDDuQZtjo64EYndwAhvAoWHClJBdn/Pi7VNKkbndB/ua8QHeYnS\nQfjigkGjbTBrMA4GA1UdDwEB/wQEAwIBpjAdBgNVHSUEFjAUBggrBgEFBQcDAgYI\nKwYBBQUHAwEwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg1qeBk71KP0jz/nAz\n50GmFnjhn9RrI0rMNMxCgDiTTCYwCgYIKoZIzj0EAwIDSAAwRQIhAMMMD4WibWkW\nfnE9vdXPWv5tKNT6ZTP1z8Ki9XcwkVsMAiBdIPxEIfN0AyhIind6Z50LA9upmHG7\ndeEWK9VXzl3nww==\n-----END CERTIFICATE-----\n"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "192.168.99.100",
+        "hostnameOverride": "192.168.99.100"
+      }
+    } 
+  },
+  "orderers": {
+    "certificate-orderer": {
+      "url": "grpc://192.168.99.100:30006"
+    },
+    "tlsCACerts": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIICVDCCAfqgAwIBAgIRALLc46ujmFZLvrzQOF6pogQwCgYIKoZIzj0EAwIwdDEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xGDAWBgNVBAoTD2NlcnRpZmljYXRlLmNvbTEeMBwGA1UEAxMVdGxz\nY2EuY2VydGlmaWNhdGUuY29tMB4XDTIwMDcxMDA1MDkwMFoXDTMwMDcwODA1MDkw\nMFowdDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcT\nDVNhbiBGcmFuY2lzY28xGDAWBgNVBAoTD2NlcnRpZmljYXRlLmNvbTEeMBwGA1UE\nAxMVdGxzY2EuY2VydGlmaWNhdGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcD\nQgAExqGzoh+eYA+YWT+jKsBr199nCQnVJW7Ivsp4a7dfBLB397ydjH6FlOFKOuOf\n3DV8vxbz2c68UsU7hXdFTX7+laNtMGswDgYDVR0PAQH/BAQDAgGmMB0GA1UdJQQW\nMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkGA1UdDgQi\nBCClMfxsaeRIwlLABCVE4W9oOuwIsx+9Vq38thf6QhCwHDAKBggqhkjOPQQDAgNI\nADBFAiEAtBLlGMiUrC4k64VV4jsuQhDI4Lq7KKvxC0XWh9UcSVACIDxbnf8ZZeKa\nZFRgD+W/KjT3XeDXVwOKrtwQkFz35xI9\n-----END CERTIFICATE-----\n"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "192.168.99.100",
+      "hostnameOverride": "192.168.99.100"
+    }
+  },
+  "certificateAuthorities": {
+    "certificate-academy-ca": {
+      "url": "http://192.168.99.100:30004",
+      "caName": "certificate-academy-ca",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICbzCCAhagAwIBAgIRANAdmjeBJV/FJEZt2m6N0lYwCgYIKoZIzj0EAwIwgYEx\nCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4g\nRnJhbmNpc2NvMSAwHgYDVQQKExdhY2FkZW15LmNlcnRpZmljYXRlLmNvbTEjMCEG\nA1UEAxMaY2EuYWNhZGVteS5jZXJ0aWZpY2F0ZS5jb20wHhcNMjAwNzEwMDUwOTAw\nWhcNMzAwNzA4MDUwOTAwWjCBgTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlm\nb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xIDAeBgNVBAoTF2FjYWRlbXku\nY2VydGlmaWNhdGUuY29tMSMwIQYDVQQDExpjYS5hY2FkZW15LmNlcnRpZmljYXRl\nLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABMcDQQY0YvTUaPwWDACaCDb2\nbFj7KCBi8zafGB93cXBq8WqGFwYX57PRkTuqJVgbFGkm0t3+hAGsTy5M5HL5Biij\nbTBrMA4GA1UdDwEB/wQEAwIBpjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUH\nAwEwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg3323J/YZy+KYu7BzXOLbW/Us\nuiN9fmCn7Ev5NNhYV9MwCgYIKoZIzj0EAwIDRwAwRAIgdr2oBAvBKpHYbZLZ0ULh\n0bXq1KQGCYvfedzKdYP5Qm4CIDhrlIkqsDKdc0LM+pnGRWhPkWTd3eNRSh3cwpzK\nzLg4\n-----END CERTIFICATE-----\n"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

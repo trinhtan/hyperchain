@@ -1,0 +1,150 @@
+/** @format */
+
+"use strict";
+
+const argv = require("yargs").argv;
+const conn = require("../fabric/network");
+const uuidv4 = require("uuid/v4");
+
+/**
+ * Invoke function of chaincode
+ * @param  {String} orgMSP  Org Name (default: student)
+ * @param  {String} func  Function Name (required)
+ * @param  {String} username User Name (required)
+ */
+
+async function main() {
+  try {
+    if (!argv.func || !argv.username || !argv.org) {
+      console.log(`Parameter func or username or org cannot undefined`);
+      return;
+    }
+
+    let func = argv.func.toString();
+    let username = argv.username.toString();
+    let org = argv.org.toString();
+
+    const networkObj = await conn.connectToNetwork(org, username, true);
+  {% for obj in data['objects'] %}
+    {% if loop.first %}
+    if (func === "Create{{obj['name']|capitalize}}") {
+    {% else %}
+    } else if (func === "Create{{obj['name']|capitalize}}") {
+    {% endif %}
+
+      let {{obj['name']|capitalize}}ID = uuidv4();
+    {% if obj['is_dependenced'] != None %}
+      {% for case in obj['is_dependenced'] %}
+      let {{case['field']}} = argv.{{case['field']}}.toString();
+      {% endfor %}
+    {% endif %}
+    {% for property in obj['properties'] %}
+      let {{property['name']}} = argv.{{property['name']}}.toString();
+    {% endfor %}
+
+      let {{obj['name']}}Created = {
+        {% if obj['is_dependenced'] != None %}
+        {% for case in obj['is_dependenced'] %}
+        {{case['field']}}: {{case['field']}},
+        {% endfor %}
+        {% endif %}
+        {{obj['name']|capitalize}}ID : {{obj['name']|capitalize}}ID ,
+        {% for property in obj['properties'] %}
+        {{property['name']}}: {{property['name']}},
+        {% endfor %}
+      };
+
+      await conn.{{obj['create']['function_name']}}(networkObj, {{obj['name']}}Created);
+
+  {% endfor %}
+  {% for obj in data['objects'] %}
+  {% if obj['update'] != None %}
+    } else if (func === "Update{{obj['name']|capitalize}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();;
+    {% for property in obj['properties'] %}
+      let {{property['name']}} = argv.{{property['name']}}.toString();
+    {% endfor %}
+
+      let {{obj['name']}}Updated = {
+        {{obj['name']|capitalize}}ID : {{obj['name']|capitalize}}ID ,
+        {% for property in obj['properties'] %}
+        {{property['name']}}: {{property['name']}},
+        {% endfor %}
+      };
+
+      await conn.{{obj['update']['function_name']}}(networkObj, {{obj['name']}}Updated);
+  {% endif %}
+  {% endfor %}
+  {% for obj in data['objects'] %}
+  {% if obj['inclusion'] != None %}
+    {% for case in obj['inclusion'] %}
+    } else if (func === "{{case['add']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['child_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['add']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID);
+    } else if (func === "{{case['remove']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['child_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['remove']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID);
+    {% endfor %}
+  {% endif %}
+  {% endfor %}
+  {% for obj in data['objects'] %}
+  {% if obj['owner'] != None %}
+    {% for case in obj['owner'] %}
+    } else if (func === "{{case['add']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['child_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['add']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID);
+    } else if (func === "{{case['remove']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['child_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['remove']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID);
+     } else if (func === "{{case['change']['function_name']}}") {
+
+      let {{case['child_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+      let new{{obj['name']|capitalize}}ID = argv.new{{obj['name']|capitalize}}ID.toString();
+
+      await conn.{{case['change']['function_name']}}(networkObj,  {{case['child_obj_name']|capitalize}}ID, new{{obj['name']|capitalize}}ID);
+    {% endfor %}
+  {% endif %}
+  {% endfor %}
+  {% for obj in data['objects'] %}
+  {% if obj['match'] != None %}
+    {% for case in obj['match'] %}
+    } else if (func === "{{case['add']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['des_obj_name']|capitalize}}ID = argv.{{case['des_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['add']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['des_obj_name']|capitalize}}ID);
+    } else if (func === "{{case['remove']['function_name']}}") {
+
+      let {{obj['name']|capitalize}}ID = argv.{{obj['name']|capitalize}}ID.toString();
+      let {{case['des_obj_name']|capitalize}}ID = argv.{{case['child_obj_name']|capitalize}}ID.toString();
+
+      await conn.{{case['remove']['function_name']}}(networkObj, {{obj['name']|capitalize}}ID, {{case['des_obj_name']|capitalize}}ID);
+    {% endfor %}
+  {% endif %}
+  {% endfor %}
+    } else {
+      console.log("Failed!");
+      process.exit(0);
+    }
+    console.log('Transaction has been submitted');
+  } catch (error) {
+    console.error(`Failed to submit transaction: ${error}`);
+    process.exit(1);
+  }
+}
+
+main();

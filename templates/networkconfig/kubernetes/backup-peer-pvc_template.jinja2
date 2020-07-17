@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{data['domain']}}-{{org['name']}}-{{peer['peer']}}-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      name: {{data['domain']}}-{{org['name']}}-{{peer['peer']}}-files

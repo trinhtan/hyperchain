@@ -1,0 +1,469 @@
+/** @format */
+
+"use strict";
+const {
+  FileSystemWallet,
+  Gateway,
+  X509WalletMixin,
+} = require("fabric-network");
+const path = require("path");
+require("dotenv").config();
+
+exports.connectToNetwork = async function (org, username, cli = false) {
+  try {
+    let identity = username;
+
+    const ccpPath = path.resolve(
+      __dirname,
+      "..",
+      "connection-files",
+      `connection-${org}.json`
+    );
+    let walletPath = path.join(process.cwd(), `/cli/wallet/wallet-${org}`);
+
+    if (cli) {
+      walletPath = path.join(process.cwd(), `/wallet/wallet-${org}`);
+    }
+
+    const wallet = new FileSystemWallet(walletPath);
+    const userExists = await wallet.exists(identity);
+
+    let networkObj;
+
+    if (!userExists) {
+      let response = {};
+      response.error =
+        "An identity for the user " +
+        identity +
+        " does not exist in the wallet. Register " +
+        identity +
+        " first";
+      return response;
+    } else {
+      const gateway = new Gateway();
+
+      await gateway.connect(ccpPath, {
+        wallet: wallet,
+        identity: identity,
+        discovery: { enabled: false, asLocalhost: false },
+      });
+
+      const network = await gateway.getNetwork("{{data['domain']}}channel");
+      const contract = await network.getContract("{{data['domain']}}");
+
+      networkObj = {
+        contract: contract,
+        network: network,
+        gateway: gateway,
+        username: username,
+      };
+    }
+
+    return networkObj;
+  } catch (error) {
+    console.error(`Failed to evaluate transaction: ${error}`);
+    process.exit(1);
+  }
+};
+
+exports.query = async function (networkObj, func, args) {
+  let response = {
+    success: false,
+    msg: "",
+  };
+  try {
+    if (Array.isArray(args)) {
+      response.msg = await networkObj.contract.evaluateTransaction(
+        func,
+        ...args
+      );
+
+      await networkObj.gateway.disconnect();
+      response.success = true;
+      return response;
+    } else if (args) {
+      response.msg = await networkObj.contract.evaluateTransaction(func, args);
+
+      await networkObj.gateway.disconnect();
+      response.success = true;
+      return response;
+    } else {
+      response.msg = await networkObj.contract.evaluateTransaction(func);
+
+      await networkObj.gateway.disconnect();
+      response.success = true;
+      return response;
+    }
+  } catch (error) {
+    response.success = false;
+    response.msg = error;
+    return response;
+  }
+};
+
+{% if chaincode_by_config == 'yes' %}
+{% for obj in data['objects'] %}
+
+exports.{{obj['create']['function_name']}} = async function (networkObj, {{obj['name']}}Created) {
+  if (
+  {% if obj['is_dependenced'] != None %}
+    {% for case in obj['is_dependenced'] %}
+    !{{obj['name']}}Created.{{case['field']}} ||
+    {% endfor %}
+  {% endif %}
+    !{{obj['name']}}Created.{{obj['name']|capitalize}}ID ||
+      {% for property in obj['properties'] %}
+        {% if not loop.last %}
+    !{{obj['name']}}Created.{{property['name']}} ||
+        {% else %}
+    !{{obj['name']}}Created.{{property['name']}}
+        {% endif %}
+      {% endfor %}
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{obj['create']['function_name']}}",
+  {% if obj['is_dependenced'] != None %}
+    {% for case in obj['is_dependenced'] %}
+      {{obj['name']}}Created.{{case['field']}},
+    {% endfor %}
+  {% endif %}
+      {{obj['name']}}Created.{{obj['name']|capitalize}}ID,
+      {% for property in obj['properties'] %}
+        {% if not loop.last %}
+      {{obj['name']}}Created.{{property['name']}},
+        {% else %}
+      {{obj['name']}}Created.{{property['name']}}
+        {% endif %}
+      {% endfor %}
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Create Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+};
+{% endfor %}
+{% for obj in data['objects'] %}
+{% if obj['update'] != None %}
+
+exports.{{obj['update']['function_name']}} = async function (networkObj, {{obj['name']}}Updated) {
+  if (
+    !{{obj['name']}}Updated.{{obj['name']|capitalize}}ID ||
+      {% for property in obj['properties'] %}
+        {% if not loop.last %}
+    !{{obj['name']}}Updated.{{property['name']}} ||
+        {% else %}
+    !{{obj['name']}}Updated.{{property['name']}}
+        {% endif %}
+      {% endfor %}
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{obj['update']['function_name']}}",
+      {{obj['name']}}Updated.{{obj['name']|capitalize}}ID,
+      {% for property in obj['properties'] %}
+        {% if not loop.last %}
+      {{obj['name']}}Updated.{{property['name']}},
+        {% else %}
+      {{obj['name']}}Updated.{{property['name']}}
+        {% endif %}
+      {% endfor %}
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+};
+{% endif %}
+{% endfor %}
+{% for obj in data['objects'] %}
+  {% if obj['inclusion'] != None %}
+    {% for case in obj['inclusion'] %}
+
+exports.{{case['add']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['child_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['add']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['child_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+
+exports.{{case['remove']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['child_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['remove']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['child_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+{% for obj in data['objects'] %}
+  {% if obj['owner'] != None %}
+    {% for case in obj['owner'] %}
+
+exports.{{case['add']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['child_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['add']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['child_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+
+exports.{{case['remove']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['child_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['child_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['remove']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['child_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+
+exports.{{case['change']['function_name']}} = async function (networkObj, {{case['child_obj_name']|capitalize}}ID, new{{obj['name']|capitalize}}ID) {
+  if (
+    !new{{obj['name']|capitalize}}ID ||
+    !{{case['child_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['change']['function_name']}}",
+      {{case['child_obj_name']|capitalize}}ID,
+      new{{obj['name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+{% for obj in data['objects'] %}
+  {% if obj['match'] != None %}
+    {% for case in obj['match'] %}
+
+exports.{{case['add']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['des_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['des_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['add']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['des_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+
+exports.{{case['remove']['function_name']}} = async function (networkObj, {{obj['name']|capitalize}}ID, {{case['des_obj_name']|capitalize}}ID) {
+  if (
+    !{{obj['name']|capitalize}}ID ||
+    !{{case['des_obj_name']|capitalize}}ID
+  ) {
+    let response = {};
+    response.error =
+      "Error! You need to fill all fields before you can register!";
+    return response;
+  }
+
+  try {
+    await networkObj.contract.submitTransaction(
+      "{{case['remove']['function_name']}}",
+      {{obj['name']|capitalize}}ID,
+      {{case['des_obj_name']|capitalize}}ID
+    );
+
+    await networkObj.gateway.disconnect();
+    let response = {
+      success: true,
+      msg: "Update Successfully!",
+    };
+
+    return response;
+  } catch (error) {
+    let response = {
+      success: false,
+      msg: error,
+    };
+    return response;
+  }
+}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+{% endif %}

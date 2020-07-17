@@ -1,0 +1,40 @@
+{
+  "domain": "edu",
+  "orgs": [
+    {
+      "name": "student",
+      "storage": 1,
+      "peer_number": 1,
+      "peers": [
+        {
+          "peer": "peer0",
+          "port": 30000,
+          "event_port": 30002
+        }
+      ],
+      "ca": {
+        "port": 30004,
+        "target_port": 7054
+      }
+    },
+    {
+      "name": "academy",
+      "peer_number": 1,
+      "storage": 1,
+      "peers": [
+        {
+          "peer": "peer0",
+          "port": 30001,
+          "event_port": 30003
+        }
+      ],
+      "ca": {
+        "port": 30005,
+        "target_port": 7054
+      }
+    }
+  ],
+  "orderer": {
+    "port": 30006
+  }
+}

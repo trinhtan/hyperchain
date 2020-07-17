@@ -1,0 +1,63 @@
+MIN_SLEEP=1
+MAX_SLEEP=3
+
+verifyResult() {
+  if [ $1 -ne 0 ]; then
+    echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
+    echo "=== ERROR !!! FAILED to execute End-2-End Scenario ==="
+    echo
+    exit 1
+  fi
+}
+
+{% for org in data['orgs'] %}
+cp -r /fabric/config/chaincode $GOPATH/src/
+export CHAINCODE_NAME="{{data['domain']}}"
+export CHAINCODE_VERSION="{{version}}"
+export FABRIC_CFG_PATH="/etc/hyperledger/fabric"
+export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/{{org['name']}}.{{data['domain']}}.com/users/Admin@{{org['name']}}.{{data['domain']}}.com/msp"
+export CORE_PEER_LOCALMSPID="{{org['name']|capitalize}}MSP"
+    {% for peer in org['peers'] %}
+
+export CORE_PEER_ADDRESS="{{data['domain']}}-{{org['name']}}-{{peer['peer']}}:{{peer['port']}}"
+set -x
+peer chaincode install -n ${CHAINCODE_NAME} -l golang -v ${CHAINCODE_VERSION} -p chaincode/{{data['domain']}}/ >&log.txt
+res=$?
+set +x
+cat log.txt
+verifyResult $res "Chaincode installation on ${CORE_PEER_ADDRESS} has failed"
+echo "=== Chaincode is installed on ${CORE_PEER_ADDRESS} ==="
+echo
+sleep $MAX_SLEEP
+    {% endfor %}
+{% endfor %}
+
+export CHAINCODE_NAME="{{data['domain']}}"
+export CHAINCODE_VERSION="{{version}}"
+export FABRIC_CFG_PATH="/etc/hyperledger/fabric"
+export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/{{data['orgs'][0]['name']}}.{{data['domain']}}.com/users/Admin@{{data['orgs'][0]['name']}}.{{data['domain']}}.com/msp"
+export CORE_PEER_LOCALMSPID="{{data['orgs'][0]['name']|capitalize}}MSP"
+export CORE_PEER_ADDRESS="{{data['domain']}}-{{data['orgs'][0]['name']}}-peer0:{{data['orgs'][0]['peers'][0]['port']}}"
+export ORDERER_URL="{{data['domain']}}-orderer:{{data['orderer']['port']}}"
+export FABRIC_LOGGING_LEVEL=debug
+set -x
+peer chaincode instantiate -o ${ORDERER_URL} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} -l golang -v ${CHAINCODE_VERSION} -c '{"Args":[]}' -P "OR ({% for org in data['orgs'] %}'{{org['name']|capitalize}}MSP.peer'{{ ", " if not loop.last }}{% endfor %}) " >&log.txt
+res=$?
+set +x
+cat log.txt
+verifyResult $res "Chaincode instantiation on ${CORE_PEER_ADDRESS} on channel '${CHANNEL_NAME}' failed"
+echo "=== Chaincode is instantiated on ${CORE_PEER_ADDRESS} on channel '${CHANNEL_NAME}' ==="
+echo
+sleep $MAX_SLEEP
+
+export CHAINCODE_NAME="{{data['domain']}}"
+export FABRIC_CFG_PATH="/etc/hyperledger/fabric"
+export ORDERER_URL="{{data['domain']}}-orderer:{{data['orderer']['port']}}"
+export CORE_PEER_LOCALMSPID="{{data['orgs'][0]['name']|capitalize}}MSP"
+export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/{{data['orgs'][0]['name']}}.{{data['domain']}}.com/users/Admin@{{data['orgs'][0]['name']}}.{{data['domain']}}.com/msp"
+export CORE_PEER_ADDRESS="{{data['domain']}}-{{data['orgs'][0]['name']}}-{{data['orgs'][0]['peers'][0]['peer']}}:{{data['orgs'][0]['peers'][0]['port']}}"
+
+#peer chaincode invoke --peerAddresses ${CORE_PEER_ADDRESS} -o ${ORDERER_URL} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} -c '{"Args":["CreateSubject","Subject01","Trinh Van Tan", "abc"]}'
+#sleep $MAX_SLEEP
+#peer chaincode query -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} -c '{"Args": ["GetAllSubjects"]}'
+exit 0

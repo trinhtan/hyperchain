@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{data['domain']}}-${ORG}-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{data['domain']}}-${ORG}-ca
+  template:
+    metadata:
+      labels:
+        app: {{data['domain']}}-${ORG}-ca
+    spec:
+      volumes:
+        - name: fabric-{{data['domain']}}-files
+          persistentVolumeClaim:
+            claimName: fabric-{{data['domain']}}-pvc
+      containers:
+        - name: {{data['domain']}}-${ORG}-ca
+          image: hyperledger/fabric-ca:1.4.4
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+          		'sh',
+          		'-c',
+              'fabric-ca-server start -b admin:adminpw -d'
+            ]
+          env:
+            - name: TZ
+              value: 'America/Sao_Paulo'
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: '{{data['domain']}}-${ORG}-ca'
+            - name: FABRIC_CA_SERVER_PORT
+              value: '${PORT}'
+            - name: FABRIC_CA_SERVER_DEBUG
+              value: 'true'
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: 'false'
+            - name: FABRIC_CA_SERVER_CA_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/${ORG}.{{data['domain']}}.com/ca/ca.${ORG_}.{{data['domain']}}.com-cert.pem
+            - name: FABRIC_CA_SERVER_CA_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/${ORG}.{{data['domain']}}.com/ca/${PRIVATE_KEY}
+            - name: FABRIC_CA_SERVER_TLS_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/${ORG}.{{data['domain']}}.com/ca/ca.${ORG_}.{{data['domain']}}.com-cert.pem
+            - name: FABRIC_CA_SERVER_TLS_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/${ORG}.{{data['domain']}}.com/ca/${PRIVATE_KEY}
+            - name: GODEBUG
+              value: 'netdns=go'
+          volumeMounts:
+            - mountPath: /fabric
+              name: fabric-{{data['domain']}}-files

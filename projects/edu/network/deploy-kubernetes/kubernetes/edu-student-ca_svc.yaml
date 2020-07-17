@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: edu-student-ca
+  labels:
+    run: edu-student-ca
+spec:
+  type: NodePort
+  selector:
+    app: edu-student-ca
+  ports:
+    - protocol: TCP
+      nodePort: 30004
+      targetPort: 7054
+      port: 30004
+      name: grpc
+    # - protocol: TCP
+    #  port: 7054
+    #  name: grpc1

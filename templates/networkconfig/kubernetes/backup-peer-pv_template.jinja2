@@ -1,0 +1,18 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{data['domain']}}-{{org['name']}}-{{peer['peer']}}-pv
+  labels:
+    type: local
+    name: {{data['domain']}}-{{org['name']}}-{{peer['peer']}}-files
+spec:
+  capacity:
+    storage: {{org['storage']}}Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /nfs/{{data['domain']}}-{{org['name']}}-{{peer['peer']}}/var
+    server: storage.local.parisi.biz
+    readOnly: false

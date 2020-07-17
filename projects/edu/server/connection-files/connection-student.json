@@ -1,0 +1,67 @@
+{
+  "name": "network-student",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Student",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "educhannel": {
+      "orderers": ["edu-orderer"],
+      "peers": {
+        "edu-student-peer0": {}      
+      }
+    }
+  },
+  "organizations": {
+    "Student": {
+      "mspid": "StudentMSP",
+      "peers": [
+        "edu-student-peer0"      
+			],
+      "certificateAuthorities": ["edu-student-ca"]
+    }
+  },
+  "peers": {
+    "edu-student-peer0": {
+      "url": "grpc://192.168.99.103:30000",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICVDCCAfqgAwIBAgIRAKtK+tK1yPDlwhJnRtL3vQAwCgYIKoZIzj0EAwIwdDEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xGDAWBgNVBAoTD3N0dWRlbnQuZWR1LmNvbTEeMBwGA1UEAxMVdGxz\nY2Euc3R1ZGVudC5lZHUuY29tMB4XDTIwMDYyNzA3MjIwMFoXDTMwMDYyNTA3MjIw\nMFowdDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcT\nDVNhbiBGcmFuY2lzY28xGDAWBgNVBAoTD3N0dWRlbnQuZWR1LmNvbTEeMBwGA1UE\nAxMVdGxzY2Euc3R1ZGVudC5lZHUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcD\nQgAElubrpMVKYMuDvC8aUPRpXDerr7+1hM2O62eSXiPxQ3iJwn+vWI9hNVRnoQ5/\nvv5hl8GyZLoSk84r+bVlLUw4yaNtMGswDgYDVR0PAQH/BAQDAgGmMB0GA1UdJQQW\nMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkGA1UdDgQi\nBCBil73DwGR1smkVlu/z7BgAdIGPCs4Arc+FQ2raXj6xBDAKBggqhkjOPQQDAgNI\nADBFAiEApsLdd6s3FhLdQ+NRnNOEPUgZnx4E0aET6iYHkaG9FicCICkY312eodAL\nIP8cjInLwFp9Xe6k/1sOuYDlKRwTL1TG\n-----END CERTIFICATE-----\n"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "192.168.99.103",
+        "hostnameOverride": "192.168.99.103"
+      }
+    } 
+  },
+  "orderers": {
+    "edu-orderer": {
+      "url": "grpc://192.168.99.103:30006"
+    },
+    "tlsCACerts": {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIICMzCCAdqgAwIBAgIRAIShsQG6iT7QqKWalzm30gAwCgYIKoZIzj0EAwIwZDEL\nMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG\ncmFuY2lzY28xEDAOBgNVBAoTB2VkdS5jb20xFjAUBgNVBAMTDXRsc2NhLmVkdS5j\nb20wHhcNMjAwNjI3MDcyMjAwWhcNMzAwNjI1MDcyMjAwWjBkMQswCQYDVQQGEwJV\nUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEQ\nMA4GA1UEChMHZWR1LmNvbTEWMBQGA1UEAxMNdGxzY2EuZWR1LmNvbTBZMBMGByqG\nSM49AgEGCCqGSM49AwEHA0IABHWP9gbOVvu6XTgfadkudNn/nH0P0o2gYP/b1xWx\n5xIe/q6VnFFISH7HLHEmJJ5J1ovbO0ehUbLTnRnqJeoDY6qjbTBrMA4GA1UdDwEB\n/wQEAwIBpjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwDwYDVR0TAQH/\nBAUwAwEB/zApBgNVHQ4EIgQg2meAbrXbBA+KN5VW59mL542QGrMM1LJrbyiMijO2\nty0wCgYIKoZIzj0EAwIDRwAwRAIgGDFUeSlsEasnfHtvJVcbLLF1WwXtcU17VaxI\nImKqWW0CIEJojEYtuc/b5AutmIab/0qHSkpurYHX2B0+sIEJy6nU\n-----END CERTIFICATE-----\n"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "192.168.99.103",
+      "hostnameOverride": "192.168.99.103"
+    }
+  },
+  "certificateAuthorities": {
+    "edu-student-ca": {
+      "url": "http://192.168.99.103:30004",
+      "caName": "edu-student-ca",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICTTCCAfOgAwIBAgIQYmD4qYO7lI4PWMZu8gPLEDAKBggqhkjOPQQDAjBxMQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEYMBYGA1UEChMPc3R1ZGVudC5lZHUuY29tMRswGQYDVQQDExJjYS5z\ndHVkZW50LmVkdS5jb20wHhcNMjAwNjI3MDcyMjAwWhcNMzAwNjI1MDcyMjAwWjBx\nMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2Fu\nIEZyYW5jaXNjbzEYMBYGA1UEChMPc3R1ZGVudC5lZHUuY29tMRswGQYDVQQDExJj\nYS5zdHVkZW50LmVkdS5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATuPPQ9\ndD64RnsXg/QTe/XG94VFfFpp7kFHV90xIhxsHr1XNxvdhtyUvNacZ01cyfDauA7G\n8J/w2kcDvUKiriLto20wazAOBgNVHQ8BAf8EBAMCAaYwHQYDVR0lBBYwFAYIKwYB\nBQUHAwIGCCsGAQUFBwMBMA8GA1UdEwEB/wQFMAMBAf8wKQYDVR0OBCIEILNI5nCu\ntswiPZ6SaVAwmEr6PGtHLxKuDqSye9E3uMaOMAoGCCqGSM49BAMCA0gAMEUCIQDn\nkk2GqxIBt550foNd677R/OkvRxhB/x2T+/GFBT6aOwIgDJHa7Y7w7e21xN7HuPDa\nmZ85hIOkweL/yxQ83poaf6Q=\n-----END CERTIFICATE-----\n"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

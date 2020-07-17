@@ -1,0 +1,18 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: certificate-academy-peer0-pv
+  labels:
+    type: local
+    name: certificate-academy-peer0-files
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /nfs/certificate-academy-peer0/var
+    server: storage.local.parisi.biz
+    readOnly: false

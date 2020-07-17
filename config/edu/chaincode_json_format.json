@@ -1,0 +1,149 @@
+{
+  "domain": "edu",
+  "objects": [
+    {
+      "name": "course",
+      "name_many": "courses",
+      "create": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "CreateCourse"
+      },
+      "update": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "UpdateCourse"
+      },
+      "delete": null,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "inclusion": [],
+      "is_inclused": [],
+      "dependence": [],
+      "is_dependenced": [],
+      "owner": [],
+      "is_owned": [],
+      "match": [],
+      "is_matched": [],
+      "fields": [
+        {
+          "name": "CourseID",
+          "type": "String",
+          "typeRelationship": ""
+        },
+        {
+          "name": "Name",
+          "type": "String",
+          "typeRelationship": "none"
+        }
+      ],
+      "relationship": "",
+      "relatedObj": [],
+      "newField": ""
+    },
+    {
+      "name": "subject",
+      "name_many": "subjects",
+      "create": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "CreateSubject"
+      },
+      "update": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "UpdateSubject"
+      },
+      "delete": null,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "inclusion": [],
+      "is_inclused": [],
+      "dependence": [],
+      "is_dependenced": [],
+      "owner": [],
+      "is_owned": [],
+      "match": [],
+      "is_matched": [],
+      "fields": [
+        {
+          "name": "SubjectID",
+          "type": "String",
+          "typeRelationship": ""
+        },
+        {
+          "name": "Name",
+          "type": "String",
+          "typeRelationship": "none"
+        }
+      ],
+      "relationship": "",
+      "relatedObj": [],
+      "newField": ""
+    },
+    {
+      "name": "class",
+      "name_many": "classs",
+      "create": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "CreateClass"
+      },
+      "update": {
+        "msp": [
+          "student",
+          "academy"
+        ],
+        "function_name": "UpdateClass"
+      },
+      "delete": null,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "inclusion": [],
+      "is_inclused": [],
+      "dependence": [],
+      "is_dependenced": [],
+      "owner": [],
+      "is_owned": [],
+      "match": [],
+      "is_matched": [],
+      "fields": [
+        {
+          "name": "ClassID",
+          "type": "String",
+          "typeRelationship": ""
+        },
+        {
+          "name": "Name",
+          "type": "String",
+          "typeRelationship": "none"
+        }
+      ],
+      "relationship": "",
+      "relatedObj": [],
+      "newField": ""
+    }
+  ]
+}

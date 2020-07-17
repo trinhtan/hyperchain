@@ -1,0 +1,67 @@
+{
+  "name": "network-academy",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Academy",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "educhannel": {
+      "orderers": ["edu-orderer"],
+      "peers": {
+        "edu-academy-peer0": {}      
+      }
+    }
+  },
+  "organizations": {
+    "Academy": {
+      "mspid": "AcademyMSP",
+      "peers": [
+        "edu-academy-peer0"      
+			],
+      "certificateAuthorities": ["edu-academy-ca"]
+    }
+  },
+  "peers": {
+    "edu-academy-peer0": {
+      "url": "grpc://192.168.99.103:30001",
+      "tlsCACerts": {
+        "pem": "${PEERPEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "192.168.99.103",
+        "hostnameOverride": "192.168.99.103"
+      }
+    } 
+  },
+  "orderers": {
+    "edu-orderer": {
+      "url": "grpc://192.168.99.103:30006"
+    },
+    "tlsCACerts": {
+      "pem": "${OPEM}"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "192.168.99.103",
+      "hostnameOverride": "192.168.99.103"
+    }
+  },
+  "certificateAuthorities": {
+    "edu-academy-ca": {
+      "url": "http://192.168.99.103:30005",
+      "caName": "edu-academy-ca",
+      "tlsCACerts": {
+        "pem": "${CAPEM}"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: {{data['domain']}}.com
+    Specs:
+      - Hostname: orderer
+PeerOrgs:
+{% for org in data['orgs'] %}
+  - Name: {{org['name']|capitalize}}
+    Domain: {{org['name']}}.{{data['domain']}}.com
+    EnableNodeOUs: true
+    Template:
+      Count: {{org['peer_number']}}
+    Users:
+      Count: 1
+{% endfor %}

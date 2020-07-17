@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{data['domain']}}-orderer
+  labels:
+    run: {{data['domain']}}-orderer
+spec:
+  type: NodePort
+  selector:
+    name: {{data['domain']}}-orderer
+  ports:
+    - protocol: TCP
+      nodePort: {{data['orderer']['port']}}
+      targetPort: {{data['orderer']['port']}}
+      port: {{data['orderer']['port']}}
+      name: grpc

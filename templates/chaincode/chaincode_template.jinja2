@@ -1,0 +1,1311 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+    "errors"
+
+	"github.com/hyperledger/fabric/core/chaincode/cid"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+	sc "github.com/hyperledger/fabric/protos/peer"
+)
+
+
+type SmartContract struct {
+}
+
+{% for obj in data['objects'] %}
+type {{obj['name']|capitalize}} struct {
+	{{obj['name']|capitalize}}ID string
+	{% for property in obj['properties'] %}
+	{{property['name']}}	{{property['type']}}
+	{% endfor %}
+	{% if obj['inclusion'] != None %}
+		{% for case in obj['inclusion'] %}
+	{{case['field']}}	[]string
+		{% endfor %}
+	{% endif %}
+	{% if obj['dependence'] != None %}
+		{% for case in obj['dependence'] %}
+	{{case['field']}}	[]string
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_dependenced'] != None %}
+		{% for case in obj['is_dependenced'] %}
+	{{case['field']}}	string
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_owned'] != None %}
+		{% for case in obj['is_owned'] %}
+	{{case['field']}}	string
+		{% endfor %}
+	{% endif %}
+	{% if obj['owner'] != None %}
+		{% for case in obj['owner'] %}
+	{{case['field']}}	[]string
+		{% endfor %}
+	{% endif %}
+	{% if obj['match'] != None %}
+		{% for case in obj['match'] %}
+	{{case['field']}}	[]string
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_matched'] != None %}
+		{% for case in obj['is_matched'] %}
+	{{case['field']}}	[]string
+		{% endfor %}
+	{% endif %}
+}
+
+{% endfor %}
+func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) sc.Response {
+	return shim.Success(nil)
+}
+
+func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) sc.Response {
+
+	function, args := stub.GetFunctionAndParameters()
+{% for obj in data['objects'] %}
+	{% if obj['create'] != None %}
+
+	if function == "{{obj['create']['function_name']}}" {
+		return {{obj['create']['function_name']}}(stub, args)
+	}
+	{% endif %}
+	{% if obj['update'] != None %}
+
+	if function == "{{obj['update']['function_name']}}" {
+		return {{obj['update']['function_name']}}(stub, args)
+	}
+	{% endif %}
+	{% if obj['delete'] != None %}
+
+	if function == "{{obj['delete']['function_name']}}" {
+		return {{obj['delete']['function_name']}}(stub, args)
+	}
+	{% endif %}
+	{% if obj['inclusion'] != None %}
+		{% for case in obj['inclusion'] %}
+
+	if function == "{{case['add']['function_name']}}" {
+		return {{case['add']['function_name']}}(stub, args)
+	}
+
+	if function == "{{case['remove']['function_name']}}" {
+		return {{case['remove']['function_name']}}(stub, args)
+	}
+
+	if function == "Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['dependence'] != None %}
+		{% for case in obj['dependence'] %}
+
+	if function == "Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_dependenced'] != None %}
+		{% for case in obj['is_dependenced'] %}
+
+	if function == "Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['owner'] !=  None %}
+		{% for case in obj['owner'] %}
+	if function == "Get{{case['field']}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['field']}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+
+	if function == "{{case['add']['function_name']}}" {
+		return {{case['add']['function_name']}}(stub, args)
+	}
+
+	if function == "{{case['remove']['function_name']}}" {
+		return {{case['remove']['function_name']}}(stub, args)
+	}
+
+	if function == "{{case['change']['function_name']}}" {
+		return {{case['change']['function_name']}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_owned'] != None %}
+		{% for case in obj['is_owned'] %}
+	if function == "Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['match'] != None %}
+		{% for case in obj['match'] %}
+
+	if function == "{{case['add']['function_name']}}" {
+		return {{case['add']['function_name']}}(stub, args)
+	}
+
+	if function == "{{case['remove']['function_name']}}" {
+		return {{case['remove']['function_name']}}(stub, args)
+	}
+
+	if function == "Get{{case['des_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['des_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_matched'] != None %}
+		{% for case in obj['is_matched'] %}
+
+	if function == "Get{{case['sou_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}" {
+		return Get{{case['sou_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub, args)
+	}
+		{% endfor %}
+	{% endif %}
+
+	if function == "Get{{obj['name']|capitalize}}"{
+		return Get{{obj['name']|capitalize}}(stub, args)
+	}
+
+	if function == "GetAll{{obj['name_many']|capitalize}}" {
+		return GetAll{{obj['name_many']|capitalize}}(stub)
+	}
+{% endfor %}
+
+	return shim.Error("Invalid Smart Contract function name!")
+}
+
+{% for obj in data['objects'] %}
+{% if obj['create'] != None %}
+func {{obj['create']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if obj['create']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in obj['create']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	{% if obj['is_dependenced'] != None %}
+	if len(args) != {{obj['properties']|length + 1 + obj['is_dependenced']|length}} {
+		return shim.Error("Incorrect number of arguments. Expecting {{obj['properties']|length + 1 + obj['is_dependenced']|length}}!")
+	}
+
+		{% set i = [] %}
+		{% for case in obj['is_dependenced'] %}
+	{{case['parent_obj_name']|capitalize}}ID := args[{{i|length}}]
+	key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{case['parent_obj_name']|capitalize}}ID
+	{{case['parent_obj_name']}}, errIsDependenced{{i|length}} := get{{case['parent_obj_name']|capitalize}}(stub, key{{case['parent_obj_name']|capitalize}})
+	if errIsDependenced{{i|length}} != nil {
+		return shim.Error("This {{case['parent_obj_name']}} does not exist - " + {{case['parent_obj_name']|capitalize}}ID + "!")
+	}
+			{% if i.append(1) %}{% endif %}
+		{% endfor %}
+	{{obj['name']|capitalize}}ID := args[{{i|length}}]
+		{% if i.append(1) %}{% endif %}
+		{% for property in obj['properties'] %}
+	{{property['name']}} := args[{{i|length}}]
+			{% if i.append(1) %}{% endif %}
+		{% endfor %}
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	_, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	{% else %}
+	if len(args) != {{obj['properties']|length + 1}} {
+		return shim.Error("Incorrect number of arguments. Expecting {{obj['properties']|length + 1}}!")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{% set i = [1] %}
+		{% for property in obj['properties'] %}
+	{{property['name']}} := args[{{i|length}}]
+	{% if i.append(1) %}{% endif %}
+		{% endfor %}
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	_, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	{% endif %}
+
+	if errObjExist == nil {
+		return shim.Error("This {{obj['name']}}ID already exists - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	{% if obj['is_dependenced'] != None %}
+		{% for case in obj['is_dependenced'] %}
+	{{case['parent_obj_name']}}.{{case['parent_field']}} = append({{case['parent_obj_name']}}.{{case['parent_field']}}, {{obj['name']|capitalize}}ID)
+	{{case['parent_obj_name']}}AsBytes, errMarshalParentObj := json.Marshal({{case['parent_obj_name']}})
+	if errMarshalParentObj != nil {
+		return shim.Error("Can not convert data of {{case['parent_obj_name']}} - " + {{case['parent_obj_name']|capitalize}}ID + " to bytes!")
+	}
+		{% endfor %}
+
+	var {{obj['name']}} = {{obj['name']|capitalize}}{{"{"}}{{obj['name']|capitalize}}ID: {{obj['name']|capitalize}}ID, {% for property in obj['properties'] %}{{property['name']}}: {{property['name']}}, {% endfor %}{% for case in obj['is_dependenced'] %}{{case['field']}}: {{case['parent_obj_name']|capitalize}}ID{% if not loop.last %}, {% endif %}{% endfor %}{{"}"}}
+	{% else %}
+	var {{obj['name']}} = {{obj['name']|capitalize}}{{"{"}}{{obj['name']|capitalize}}ID: {{obj['name']|capitalize}}ID, {% for property in obj['properties'] %}{{property['name']}}: {{property['name']}}{% if not loop.last %}, {% endif %}{% endfor %}{{"}"}}
+	{% endif %}
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data of this {{obj['name']}} to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+	{% if obj['is_dependenced'] != None %}
+		{% for case in obj['is_dependenced'] %}
+	stub.PutState(key{{case['parent_obj_name']|capitalize}}, {{case['parent_obj_name']}}AsBytes)
+		{% endfor %}
+	{% endif %}
+
+	return shim.Success(nil)
+}
+{% endif %}
+
+{% if obj['update'] != None %}
+func {{obj['update']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if obj['update']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in obj['update']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != {{obj['properties']|length + 1}} {
+		return shim.Error("Incorrect number of arguments. Expecting {{obj['properties']|length + 1}}!")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{% set i = [1] %}
+	{% for property in obj['properties'] %}
+	{{property['name']}} := args[{{i|length}}]
+	{% if i.append(1) %}{% endif %}
+	{% endfor %}
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("This {{obj['name']}} does not exist - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	{% for property in obj['properties'] %}
+	{{obj['name']}}.{{property['name']}} = {{property['name']}}
+	{% endfor %}
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+	return shim.Success(nil)
+}
+{% endif %}
+
+{% if obj['delete'] != None %}
+func {{obj['delete']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	// MSPID, errMSP := cid.GetMSPID(stub)
+
+	// if errMSP != nil {
+	// 	return shim.Error("Can not get MSPID!")
+	// }
+
+	// if {% for role in obj['delete']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+	// 	return shim.Error("Permission Denied!")
+	// }
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1!")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{% if obj['is_dependenced'] != None or obj['is_owned'] != None or obj['owner'] != None %}
+	{{obj['name']}}, err := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	{% else %}
+	_, err := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	{% endif %}
+
+	if err != nil {
+		return shim.Error("This {{obj['name']}} does not exist - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	{% if obj['is_inclused'] != None %}
+	var i int
+
+		{% for case in obj['is_inclused'] %}
+	all{{case['parent_obj_name_many']|capitalize}}, err := getList{{case['parent_obj_name_many']|capitalize}}(stub)
+	if err != nil {
+		return shim.Error("Can not get {{case['parent_obj_name']}} list!")
+	}
+
+	defer all{{case['parent_obj_name_many']|capitalize}}.Close()
+
+	for i = 0; all{{case['parent_obj_name_many']|capitalize}}.HasNext(); i++ {
+		record, err := all{{case['parent_obj_name_many']|capitalize}}.Next()
+
+		if err != nil {
+			return shim.Success(nil)
+		}
+
+		{{case['parent_obj_name']}} := {{case['parent_obj_name']|capitalize}}{}
+		json.Unmarshal(record.Value, &{{case['parent_obj_name']}})
+
+		var j int
+		var checkExist = false
+		var leng = len({{case['parent_obj_name']}}.{{case['parent_field']}})
+		for j = 0; j < leng; j++ {
+			if {{case['parent_obj_name']}}.{{case['parent_field']}}[j] == {{obj['name']|capitalize}}ID {
+				checkExist = true
+				break
+			}
+		}
+
+		if checkExist == true {
+			copy({{case['parent_obj_name']}}.{{case['parent_field']}}[j:], {{case['parent_obj_name']}}.{{case['parent_field']}}[j+1:])
+			{{case['parent_obj_name']}}.{{case['parent_field']}}[leng-1] = ""
+			{{case['parent_obj_name']}}.{{case['parent_field']}} = {{case['parent_obj_name']}}.{{case['parent_field']}}[:leng-1]
+
+			{{case['parent_obj_name']}}AsBytes, err := json.Marshal({{case['parent_obj_name']}})
+			if err != nil {
+				return shim.Error("Can not conver data to bytes!")
+			}
+
+			key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{case['parent_obj_name']}}.{{case['parent_obj_name']|capitalize}}ID
+
+			stub.PutState(key{{case['parent_obj_name']|capitalize}}, {{case['parent_obj_name']}}AsBytes)
+		}
+	}
+
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_dependenced'] != None %}
+	var k int
+	var len{{obj['name_many']|capitalize}} int
+		{% for case in obj['is_dependenced'] %}
+	key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}
+	{{case['parent_obj_name']}}, err := get{{case['parent_obj_name']|capitalize}}(stub, key{{case['parent_obj_name']|capitalize}})
+	if err != nil {
+		return shim.Error("Can not get this {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " !")
+	}
+
+	len{{obj['name_many']|capitalize}} = len({{case['parent_obj_name']}}.{{case['parent_field']}})
+	for k = 0; k < len{{obj['name_many']|capitalize}}; k++ {
+		if {{case['parent_obj_name']}}.{{case['parent_field']}}[k] == {{obj['name']|capitalize}}ID {
+			break
+		}
+	}
+
+	copy({{case['parent_obj_name']}}.{{case['parent_field']}}[k:], {{case['parent_obj_name']}}.{{case['parent_field']}}[k+1:])
+	{{case['parent_obj_name']}}.{{case['parent_field']}}[len{{obj['name_many']|capitalize}}-1] = ""
+	{{case['parent_obj_name']}}.{{case['parent_field']}} = {{case['parent_obj_name']}}.{{case['parent_field']}}[:len{{obj['name_many']|capitalize}}-1]
+
+	{{case['parent_obj_name']}}AsBytes, err := json.Marshal({{case['parent_obj_name']}})
+	if err != nil {
+		return shim.Error("Can not convert data of {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " !" )
+	}
+
+	stub.PutState(key{{case['parent_obj_name']|capitalize}}, {{case['parent_obj_name']}}AsBytes)
+		{% endfor %}
+	{% endif %}
+	{% if obj['is_owned'] != None %}
+
+	var l int
+	var lengt int
+		{% for case in obj['is_owned'] %}
+	key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}
+	{{case['parent_obj_name']}}, err := get{{case['parent_obj_name']|capitalize}}(stub, key{{case['parent_obj_name']|capitalize}})
+	if err != nil {
+		return shim.Error("This {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " does not exist!")
+	}
+
+	lengt = len({{case['parent_obj_name']}}.{{case['parent_field']}})
+	for l = 0; l < lengt; l++ {
+		if {{case['parent_obj_name']}}.{{case['parent_field']}}[l] == {{obj['name']}}.{{case['field']}} {
+			break
+		}
+	}
+
+	copy({{case['parent_obj_name']}}.{{case['parent_field']}}[l:], {{case['parent_obj_name']}}.{{case['parent_field']}}[l+1:])
+	{{case['parent_obj_name']}}.{{case['parent_field']}}[lengt-1] = ""
+	{{case['parent_obj_name']}}.{{case['parent_field']}} = {{case['parent_obj_name']}}.{{case['parent_field']}}[:lengt-1]
+
+	{{case['parent_obj_name']}}AsBytes, err := json.Marshal({{case['parent_obj_name']}})
+	if err != nil {
+		return shim.Error("Can not convert data of {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " to bytes!")
+	}
+
+	stub.PutState(key{{case['parent_obj_name']|capitalize}}, {{case['parent_obj_name']}}AsBytes)
+		{% endfor %}
+	{% endif %}
+	{% if obj['owner'] != None %}
+		{% for case in  obj['owner'] %}
+
+	for m := 0; m < len({{obj['name']}}.{{case['field']}}); m++ {
+		key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}[m]
+		{{case['child_obj_name']}}, err := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+		if err != nil {
+			return shim.Error("This {{case['child_obj_name']}} - " + {{obj['name']}}.{{case['field']}}[m] + " does not exist!")
+		}
+
+		{{case['child_obj_name']}}.{{case['child_obj_field']}} = ""
+		{{case['child_obj_name']}}AsBytes, err := json.Marshal({{case['child_obj_name']}})
+		if err != nil {
+			return shim.Error("Can not cover of {{case['child_obj_name']}} - " + {{obj['name']}}.{{case['field']}}[m] + " to bytes!")
+		}
+
+		stub.PutState(key{{case['child_obj_name']|capitalize}}, {{case['child_obj_name']}}AsBytes)
+	}
+		{% endfor %}
+	{% endif %}
+
+	stub.DelState(key{{obj['name']|capitalize}})
+	return shim.Success(nil)
+}
+{% endif %}
+{% if obj['inclusion'] != None %}
+{% for case in obj['inclusion'] %}
+
+func {{case['add']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['add']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['add']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2!")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['child_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("This {{obj['name']}} does not exist - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{case['child_obj_name']|capitalize}}ID
+	_, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+
+	if errChildObjExist != nil {
+		return shim.Error("This {{case['child_obj_name']}} does not exist - " + {{case['child_obj_name']|capitalize}}ID + "!")
+	}
+
+	{{obj['name']}}.{{case['field']}} = append({{obj['name']}}.{{case['field']}}, {{case['child_obj_name']|capitalize}}ID)
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func {{case['remove']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['remove']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['remove']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2!")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['child_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("This {{obj['name']}} does not exist - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{case['child_obj_name']|capitalize}}ID
+	_, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+
+	if errChildObjExist !=  nil {
+		return shim.Error("This {{case['child_obj_name']}} does not exist - " + {{case['child_obj_name']|capitalize}}ID + "!")
+	}
+
+	var i int
+	var len{{case['field']}} = len({{obj['name']}}.{{case['field']}})
+	for i = 0; i < len{{case['field']}}; i++ {
+		if {{obj['name']}}.{{case['field']}}[i] == {{case['child_obj_name']|capitalize}}ID {
+			break
+		}
+	}
+
+	copy({{obj['name']}}.{{case['field']}}[i:], {{obj['name']}}.{{case['field']}}[i+1:])
+	{{obj['name']}}.{{case['field']}}[len{{case['field']}}-1] = ""
+	{{obj['name']}}.{{case['field']}} = {{obj['name']}}.{{case['field']}}[:len{{case['field']}}-1]
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}}!")
+	}
+
+	var result []{{case['child_obj_name']|capitalize}}
+	var i int
+
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+
+		{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, "{{case['child_obj_name']|capitalize}}-"+{{obj['name']}}.{{case['field']}}[i])
+		if errChildObjExist != nil {
+			return shim.Error("{{case['child_obj_name']|capitalize}} does not exist - " + {{obj['name']}}.{{case['field']}}[i] + " !")
+		}
+		result = append(result, {{case['child_obj_name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(result)
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	return shim.Success(jsonRow)
+}
+{% endfor %}
+{% endif %}
+{% if obj['dependence'] != None %}
+{% for case in obj['dependence'] %}
+
+func Get{{case['child_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	var result []{{case['child_obj_name']|capitalize}}
+	var i int
+
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+
+		{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, "{{case['child_obj_name']|capitalize}}-"+{{obj['name']}}.{{case['field']}}[i])
+		if errChildObjExist != nil {
+			return shim.Error("{{case['child_obj_name']|capitalize}} does not exist - " + {{obj['name']}}.{{case['field']}}[i] + " !")
+		}
+		result = append(result, {{case['child_obj_name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(result)
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	return shim.Success(jsonRow)
+}
+{% endfor %}
+{% endif %}
+{% if obj['owner'] != None %}
+	{% for case in obj['owner'] %}
+
+func Get{{case['field']}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	var result []{{case['child_obj_name']|capitalize}}
+	var i int
+
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+
+		{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, "{{case['child_obj_name']|capitalize}}-"+{{obj['name']}}.{{case['field']}}[i])
+		if errChildObjExist != nil {
+			return shim.Error("{{case['child_obj_name']|capitalize}} does not exist - " + {{obj['name']}}.{{case['field']}}[i] + " !")
+		}
+		result = append(result, {{case['child_obj_name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(result)
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	return shim.Success(jsonRow)
+}
+
+func {{case['add']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['add']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['add']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['child_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{case['child_obj_name']|capitalize}}ID
+	{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+	if errChildObjExist != nil {
+		return shim.Error("Can not get {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + "!")
+	}
+
+	if {{case['child_obj_name']}}.{{case['child_obj_field']}} != "" {
+		return shim.Error("This {{case['child_obj_name']}} was owned by {{obj['name']}} - " + {{case['child_obj_name']}}.{{case['child_obj_field']}} + " !")
+	}
+
+	var i int
+	var checkExist = false
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+		if {{obj['name']}}.{{case['field']}}[i] == {{case['child_obj_name']|capitalize}}ID {
+			checkExist = true
+			break
+		}
+	}
+
+	if checkExist == true {
+		return shim.Error("This {{case['child_obj_name']}} already belong to {{obj['name']}}!")
+	}
+
+	{{case['child_obj_name']}}.{{case['child_obj_field']}} = {{obj['name']|capitalize}}ID
+	{{obj['name']}}.{{case['field']}} = append({{obj['name']}}.{{case['field']}}, {{case['child_obj_name']|capitalize}}ID)
+
+	{{case['child_obj_name']}}AsBytes, errMarshalChildObj := json.Marshal({{case['child_obj_name']}})
+	if errMarshalChildObj != nil {
+		return shim.Error("Can not convert data of {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + "to bytes!")
+	}
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data of {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+	stub.PutState(key{{case['child_obj_name']|capitalize}}, {{case['child_obj_name']}}AsBytes)
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func {{case['remove']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['remove']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['remove']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['child_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{case['child_obj_name']|capitalize}}ID
+	{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+	if errChildObjExist != nil {
+		return shim.Error("Can not get {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + "!")
+	}
+
+	if {{case['child_obj_name']}}.{{case['child_obj_field']}} != {{obj['name']|capitalize}}ID {
+		return shim.Error("This {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + " is not belong to {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " !")
+	}
+
+
+	var i int
+	var leng = len({{obj['name']}}.{{case['field']}})
+	for i = 0; i < leng; i++ {
+		if {{obj['name']}}.{{case['field']}}[i] == {{case['child_obj_name']|capitalize}}ID {
+			break
+		}
+	}
+
+	copy({{obj['name']}}.{{case['field']}}[i:], {{obj['name']}}.{{case['field']}}[i+1:])
+	{{obj['name']}}.{{case['field']}}[leng-1] = ""
+	{{obj['name']}}.{{case['field']}} = {{obj['name']}}.{{case['field']}}[:leng-1]
+
+	{{case['child_obj_name']}}.{{case['child_obj_field']}} = ""
+
+	{{case['child_obj_name']}}AsBytes, errMarshalChildObj := json.Marshal({{case['child_obj_name']}})
+	if errMarshalChildObj != nil {
+		return shim.Error("Can not convert data of {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + "to bytes!")
+	}
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data of {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+	stub.PutState(key{{case['child_obj_name']|capitalize}}, {{case['child_obj_name']}}AsBytes)
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func {{case['change']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['change']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['remove']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	{{case['child_obj_name']|capitalize}}ID := args[0]
+	new{{obj['name']|capitalize}}ID := args[1]
+
+	key{{case['child_obj_name']|capitalize}} := "{{case['child_obj_name']|capitalize}}-" + {{case['child_obj_name']|capitalize}}ID
+	{{case['child_obj_name']}}, errChildObjExist := get{{case['child_obj_name']|capitalize}}(stub, key{{case['child_obj_name']|capitalize}})
+	if errChildObjExist != nil {
+		return shim.Error("Can not get {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID  + "!")
+	}
+
+	old{{obj['name']|capitalize}}ID := {{case['child_obj_name']}}.{{case['child_obj_field']}}
+	keyOld{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + old{{obj['name']|capitalize}}ID
+	old{{obj['name']|capitalize}}, errObjExist := get{{obj['name']|capitalize}}(stub, keyOld{{obj['name']|capitalize}})
+	if errObjExist != nil {
+		return shim.Error("Can not get old {{obj['name']}} - " + old{{obj['name']|capitalize}}ID  + "!")
+	}
+
+	var i int
+	var leng = len(old{{obj['name']|capitalize}}.{{case['field']}})
+	for i = 0; i < leng; i++ {
+		if old{{obj['name']|capitalize}}.{{case['field']}}[i] == {{case['child_obj_name']|capitalize}}ID {
+			break
+		}
+	}
+
+	copy(old{{obj['name']|capitalize}}.{{case['field']}}[i:], old{{obj['name']|capitalize}}.{{case['field']}}[i+1:])
+	old{{obj['name']|capitalize}}.{{case['field']}}[leng-1] = ""
+	old{{obj['name']|capitalize}}.{{case['field']}} = old{{obj['name']|capitalize}}.{{case['field']}}[:leng-1]
+
+	keyNew{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + new{{obj['name']|capitalize}}ID
+	new{{obj['name']|capitalize}}, errNewObjExist := get{{obj['name']|capitalize}}(stub, keyNew{{obj['name']|capitalize}})
+	if errNewObjExist != nil {
+		return shim.Error("Can not get new {{obj['name']}} - " + new{{obj['name']|capitalize}}ID  + "!")
+	}
+
+	{{case['child_obj_name']}}.{{case['child_obj_field']}} = new{{obj['name']|capitalize}}ID
+	new{{obj['name']|capitalize}}.{{case['field']}} = append(new{{obj['name']|capitalize}}.{{case['field']}}, {{case['child_obj_name']|capitalize}}ID)
+
+	{{case['child_obj_name']}}AsBytes, errMarshalChildObj := json.Marshal({{case['child_obj_name']}})
+	if errMarshalChildObj != nil {
+		return shim.Error("Can not convert data of {{case['child_obj_name']}} - " + {{case['child_obj_name']|capitalize}}ID + "to bytes!")
+	}
+
+	old{{obj['name']|capitalize}}AsBytes, errMarshal := json.Marshal(old{{obj['name']|capitalize}})
+	if errMarshal != nil {
+		return shim.Error("Can not convert data of {{obj['name']}} - " + old{{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+
+	new{{obj['name']|capitalize}}AsBytes, errMarshalNewObj := json.Marshal(new{{obj['name']|capitalize}})
+	if errMarshalNewObj != nil {
+		return shim.Error("Can not convert data of {{obj['name']}} - " + new{{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+
+	stub.PutState(key{{case['child_obj_name']|capitalize}}, {{case['child_obj_name']}}AsBytes)
+	stub.PutState(keyOld{{obj['name']|capitalize}}, old{{obj['name']|capitalize}}AsBytes)
+	stub.PutState(keyNew{{obj['name']|capitalize}}, new{{obj['name']|capitalize}}AsBytes)
+
+	return shim.Success(nil)
+}
+	{% endfor %}
+{% endif %}
+{% if obj['is_owned']  %}
+	{% for case in obj['is_owned'] %}
+
+func Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	if {{obj['name']}}.{{case['field']}} == "" {
+		return shim.Error("This {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " hasn't got {{case['parent_obj_name']}} yet!")
+	}
+
+	key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}
+	{{case['parent_obj_name']}}, errParentObjExist := get{{case['parent_obj_name']|capitalize}}(stub, key{{case['parent_obj_name']|capitalize}})
+
+	if errParentObjExist != nil {
+		return shim.Error("Can not get {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + "!")
+	}
+
+	{{case['parent_obj_name']}}AsBytes, errMarshal := json.Marshal({{case['parent_obj_name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convet data of {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " to bytes!")
+	}
+
+	return shim.Success({{case['parent_obj_name']}}AsBytes)
+}
+	{% endfor %}
+{% endif %}
+{% if obj['is_dependenced'] != None %}
+	{% for case in obj['is_dependenced'] %}
+
+func Get{{case['parent_obj_name']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	key{{case['parent_obj_name']|capitalize}} := "{{case['parent_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}
+	{{case['parent_obj_name']}}, errParentObjExist := get{{case['parent_obj_name']|capitalize}}(stub, key{{case['parent_obj_name']|capitalize}})
+
+	if errParentObjExist != nil {
+		return shim.Error("Can not get {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + "!")
+	}
+
+	{{case['parent_obj_name']}}AsBytes, errMarshalParentObj := json.Marshal({{case['parent_obj_name']}})
+	if errMarshalParentObj != nil {
+		return shim.Error("Can not convet data of {{case['parent_obj_name']}} - " + {{obj['name']}}.{{case['field']}} + " to bytes!")
+	}
+
+	return shim.Success({{case['parent_obj_name']}}AsBytes)
+}
+	{% endfor %}
+{% endif %}
+{% if obj['match'] != None %}
+	{% for case in obj['match'] %}
+
+func {{case['add']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['add']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['remove']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['des_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " !")
+	}
+
+	key{{case['des_obj_name']|capitalize}} := "{{case['des_obj_name']|capitalize}}-" + {{case['des_obj_name']|capitalize}}ID
+	{{case['des_obj_name']}}, errDesObjExist := get{{case['des_obj_name']|capitalize}}(stub, key{{case['des_obj_name']|capitalize}})
+
+	if errDesObjExist != nil {
+		return shim.Error("Can not get {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " !")
+	}
+
+	var i int
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+		if {{obj['name']}}.{{case['field']}}[i] == {{case['des_obj_name']|capitalize}}ID {
+			return shim.Error("This {{obj['name']}} - " +  {{obj['name']|capitalize}}ID + " already {{case['add']['function_name']}} the {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " !")
+		}
+	}
+
+	{{obj['name']}}.{{case['field']}} = append({{obj['name']}}.{{case['field']}}, {{case['des_obj_name']|capitalize}}ID)
+	{{case['des_obj_name']}}.{{case['des_field']}} = append({{case['des_obj_name']}}.{{case['des_field']}}, {{obj['name']|capitalize}}ID)
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convet data of {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+	{{case['des_obj_name']}}AsBytes, errMarshalDesObj := json.Marshal({{case['des_obj_name']}})
+	if errMarshalDesObj != nil {
+		return shim.Error("Can not convet data of {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+	stub.PutState(key{{case['des_obj_name']|capitalize}}, {{case['des_obj_name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func {{case['remove']['function_name']}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	{% if case['remove']['msp'] != None %}
+
+	MSPID, errMSP := cid.GetMSPID(stub)
+
+	if errMSP != nil {
+		return shim.Error("Can not get MSPID!")
+	}
+
+	if {% for role in case['remove']['msp'] %} MSPID != "{{role|capitalize}}MSP"{% if not loop.last %} && {% endif %}{% endfor %} {
+		return shim.Error("Permission Denied!")
+	}
+	{% endif %}
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+	{{case['des_obj_name']|capitalize}}ID := args[1]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " !")
+	}
+
+	key{{case['des_obj_name']|capitalize}} := "{{case['des_obj_name']|capitalize}}-" + {{case['des_obj_name']|capitalize}}ID
+	{{case['des_obj_name']}}, errDesObjExist := get{{case['des_obj_name']|capitalize}}(stub, key{{case['des_obj_name']|capitalize}})
+
+	if errDesObjExist != nil {
+		return shim.Error("Can not get {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " !")
+	}
+
+	var i int
+	var checkExist = false
+	var leng = len({{obj['name']}}.{{case['field']}})
+	for i = 0; i < leng; i++ {
+		if {{obj['name']}}.{{case['field']}}[i] == {{case['des_obj_name']|capitalize}}ID {
+			checkExist = true
+			break
+		}
+	}
+
+	if checkExist == false {
+		return shim.Error("This {{obj['name']}} - " +  {{obj['name']|capitalize}}ID + " does not exist in the {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " !")
+	}
+
+	copy({{obj['name']}}.{{case['field']}}[i:], {{obj['name']}}.{{case['field']}}[i+1:])
+	{{obj['name']}}.{{case['field']}}[leng-1] = ""
+	{{obj['name']}}.{{case['field']}} = {{obj['name']}}.{{case['field']}}[:leng-1]
+
+	leng = len({{case['des_obj_name']}}.{{case['des_field']}})
+	for i = 0; i < leng; i++ {
+		if {{case['des_obj_name']}}.{{case['des_field']}}[i] == {{obj['name']|capitalize}}ID {
+			break
+		}
+	}
+
+	copy({{case['des_obj_name']}}.{{case['des_field']}}[i:], {{case['des_obj_name']}}.{{case['des_field']}}[i+1:])
+	{{case['des_obj_name']}}.{{case['des_field']}}[leng-1] = ""
+	{{case['des_obj_name']}}.{{case['des_field']}} = {{case['des_obj_name']}}.{{case['des_field']}}[:leng-1]
+
+	{{obj['name']}}AsBytes, errMarshal := json.Marshal({{obj['name']}})
+	if errMarshal != nil {
+		return shim.Error("Can not convet data of {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " to bytes!")
+	}
+
+	{{case['des_obj_name']}}AsBytes, errMarshalDesObj := json.Marshal({{case['des_obj_name']}})
+	if errMarshalDesObj != nil {
+		return shim.Error("Can not convet data of {{case['des_obj_name']}} - " + {{case['des_obj_name']|capitalize}}ID + " to bytes!")
+	}
+
+	stub.PutState(key{{obj['name']|capitalize}}, {{obj['name']}}AsBytes)
+	stub.PutState(key{{case['des_obj_name']|capitalize}}, {{case['des_obj_name']}}AsBytes)
+
+	return shim.Success(nil)
+}
+
+func Get{{case['des_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " !")
+	}
+
+	var i int
+	var result []{{case['des_obj_name']|capitalize}}
+
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+		key{{case['des_obj_name']|capitalize}} := "{{case['des_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}[i]
+		{{case['des_obj_name']}}, errDesObjExist := get{{case['des_obj_name']|capitalize}}(stub, key{{case['des_obj_name']|capitalize}})
+
+		if errDesObjExist != nil {
+			return shim.Error("Can not get {{case['des_obj_name']}} - " + {{obj['name']}}.{{case['field']}}[i] + " !")
+		}
+
+		result = append(result, {{case['des_obj_name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(result)
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes !")
+	}
+
+	return shim.Success(jsonRow)
+}
+
+	{% endfor %}
+{% endif %}
+{% if obj['is_matched'] != None %}
+	{% for case in obj['is_matched'] %}
+
+func Get{{case['sou_obj_name_many']|capitalize}}Of{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}, errObjExist := get{{obj['name']|capitalize}}(stub, key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}} - " + {{obj['name']|capitalize}}ID + " !")
+	}
+
+	var i int
+	var result []{{case['sou_obj_name']|capitalize}}
+
+	for i = 0; i < len({{obj['name']}}.{{case['field']}}); i++ {
+		key{{case['sou_obj_name']|capitalize}} := "{{case['sou_obj_name']|capitalize}}-" + {{obj['name']}}.{{case['field']}}[i]
+		{{case['sou_obj_name']}}, errSouObjExist := get{{case['sou_obj_name']|capitalize}}(stub, key{{case['sou_obj_name']|capitalize}})
+
+		if errSouObjExist != nil {
+			return shim.Error("Can not get {{case['sou_obj_name']}} - " + {{obj['name']}}.{{case['field']}}[i] + " !")
+		}
+
+		result = append(result, {{case['sou_obj_name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(result)
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes !")
+	}
+
+	return shim.Success(jsonRow)
+}
+	{% endfor %}
+{% endif %}
+
+func Get{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	{{obj['name']|capitalize}}ID := args[0]
+
+	key{{obj['name']|capitalize}} := "{{obj['name']|capitalize}}-" + {{obj['name']|capitalize}}ID
+	{{obj['name']}}AsBytes, errObjExist := stub.GetState(key{{obj['name']|capitalize}})
+
+	if errObjExist != nil {
+		return shim.Error("Can not get {{obj['name']}}!")
+	}
+
+	if {{obj['name']}}AsBytes == nil {
+		return shim.Error("This {{obj['name']}} does not exist - " + {{obj['name']|capitalize}}ID + "!")
+	}
+
+	return shim.Success({{obj['name']}}AsBytes)
+}
+
+func GetAll{{obj['name_many']|capitalize}}(stub shim.ChaincodeStubInterface) sc.Response {
+
+	all{{obj['name_many']|capitalize}}, errObjExist := getList{{obj['name_many']|capitalize}}(stub)
+
+	if errObjExist != nil {
+		return shim.Error("Can not get all {{obj['name_many']}}!")
+	}
+
+	defer all{{obj['name_many']|capitalize}}.Close()
+
+	var tlist []{{obj['name']|capitalize}}
+	var i int
+
+	for i = 0; all{{obj['name_many']|capitalize}}.HasNext(); i++ {
+
+		record, err := all{{obj['name_many']|capitalize}}.Next()
+
+		if err != nil {
+			return shim.Success(nil)
+		}
+
+		{{obj['name']}} := {{obj['name']|capitalize}}{}
+		json.Unmarshal(record.Value, &{{obj['name']}})
+		tlist = append(tlist, {{obj['name']}})
+	}
+
+	jsonRow, errMarshal := json.Marshal(tlist)
+
+	if errMarshal != nil {
+		return shim.Error("Can not convert data to bytes!")
+	}
+
+	return shim.Success(jsonRow)
+}
+
+func getList{{obj['name_many']|capitalize}}(stub shim.ChaincodeStubInterface) (shim.StateQueryIteratorInterface, error) {
+
+	startKey := "{{obj['name']|capitalize}}-"
+	endKey := "{{obj['name']|capitalize}}-zzzzzzzz"
+
+	resultIter, errGetRange := stub.GetStateByRange(startKey, endKey)
+	if errGetRange != nil {
+		return nil, errGetRange
+	}
+
+	return resultIter, nil
+}
+
+func get{{obj['name']|capitalize}}(stub shim.ChaincodeStubInterface, compoundKey string) ({{obj['name']|capitalize}}, error) {
+
+	var {{obj['name']}} {{obj['name']|capitalize}}
+
+	{{obj['name']}}AsBytes, errState := stub.GetState(compoundKey)
+
+	if errState != nil {
+		return  {{obj['name']}}, errors.New("Can not get {{obj['name']}}!")
+	}
+
+	if {{obj['name']}}AsBytes == nil {
+		return  {{obj['name']}}, errors.New("This {{obj['name']}} does not exist - " + compoundKey + "!")
+	}
+
+	json.Unmarshal({{obj['name']}}AsBytes, &{{obj['name']}})
+
+	return {{obj['name']}}, nil
+}
+
+{% endfor %}
+func main() {
+
+	err := shim.Start(new(SmartContract))
+
+	if err != nil {
+		fmt.Printf("Error createing new Smart Contract: %s", err)
+	}
+}

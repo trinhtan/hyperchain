@@ -1,0 +1,304 @@
+# @format
+
+objects:
+  - name: course
+    name_many: courses
+    properties:
+      - name: Description
+        type: string
+      - name: CourseName
+        type: string
+    create:
+      function_name: CreateCourse
+      msp: Null
+      # msp:
+      #   - academy
+      #   - student
+    update:
+      function_name: UpdateCourse
+      msp: Null
+      # msp:
+      # - academy
+      # - student
+    delete:
+      Null
+      # function_name: DeleteCourse
+      # msp:
+      #   - academy
+      #   - student
+    inclusion:
+      - child_obj_name: subject
+        child_obj_name_many: subjects
+        field: Subjects
+        add:
+          function_name: AddSubjectToCourse
+          msp: Null
+          # msp:
+          # - academy
+          # - student
+        remove:
+          function_name: RemoveSubjectFromCourse
+          msp: Null
+          # msp:
+          # - academy
+          # - student
+    is_inclused: Null
+    dependence:
+      - child_obj_name: certificate
+        child_obj_name_many: certificates
+        field: Certificates
+    is_dependenced: Null
+    is_owned: Null
+    owner: Null
+    match: Null
+    is_matched:
+      - sou_obj_name: student
+        sou_obj_name_many: students
+        sou_field: Courses
+        field: Students
+
+  - name: subject
+    name_many: subjects
+    properties:
+      - name: Description
+        type: string
+      - name: SubjectName
+        type: string
+    create:
+      function_name: CreateSubject
+      # msp: Null
+      msp:
+        - academy
+    update:
+      function_name: UpdateSubject
+      msp: Null
+      # msp:
+      #   - academy
+      #   - student
+    delete:
+      Null
+      # function_name: DeleteSubject
+      # msp:
+      #   - academy
+      #   - student
+    inclusion: Null
+    is_inclused:
+      - parent_obj_name: course
+        parent_obj_name_many: courses
+        parent_field: Subjects
+    dependence:
+      - child_obj_name: class
+        child_obj_name_many: classes
+        field: Classes
+    is_dependenced: Null
+    is_owned: Null
+    owner: Null
+    match: Null
+    is_matched: Null
+
+  - name: class
+    name_many: classes
+    properties:
+      - name: Description
+        type: string
+      - name: ClassName
+        type: string
+    create:
+      function_name: CreateClass
+      msp: Null
+      # msp:
+      # - academy
+      # - student
+    update:
+      function_name: UpdateClass
+      msp: Null
+      # msp:
+      # - academy
+      # - student
+    delete:
+      Null
+      # function_name: DeleteClass
+      # msp:
+      #   - academy
+      #   - student
+    inclusion: Null
+    is_inclused: Null
+    dependence:
+      - child_obj_name: score
+        child_obj_name_many: scores
+        field: Scores
+    is_dependenced:
+      - parent_obj_name: subject
+        parent_obj_name_many: subjects
+        parent_field: Classes
+        field: SubjectId
+    is_owned:
+      - parent_obj_name: teacher
+        parent_obj_name_many: teachers
+        parent_field: Classes
+        field: TeacherId
+    owner: Null
+    match: Null
+    is_matched: Null
+
+  - name: teacher
+    name_many: teachers
+    properties:
+      - name: Description
+        type: string
+      - name: TeacherName
+        type: string
+    create:
+      function_name: CreateTeacher
+      msp: Null
+      # msp:
+      # - academy
+      # - student
+    update:
+      function_name: UpdateTeacher
+      msp: Null
+      # msp:
+      # - academy
+      # - student
+    delete:
+      Null
+      # function_name: DeleteTeacher
+      # msp:
+      #   - academy
+      #   - student
+    inclusion: Null
+    is_inclused: Null
+    dependence: Null
+    is_dependenced: Null
+    owner:
+      - child_obj_name: class
+        child_obj_name_many: classes
+        child_obj_field: TeacherId
+        field: Classes
+        add:
+          function_name: AssignClassToTeacher
+          msp: Null
+          # msp:
+          # - AcademyMSP
+          # - StudentMSP
+        remove:
+          function_name: UnassignClassFromTeacher
+          msp: Null
+          # msp:
+          # - AcademyMSP
+          # - StudentMSP
+        change:
+          function_name: ChangeTeacher
+          msp: Null
+          # msp:
+          # - AcademyMSP
+          # - StudentMSP
+    is_owned: Null
+    match: Null
+    is_matched: Null
+
+  - name: student
+    name_many: students
+    properties:
+      - name: Description
+        type: string
+      - name: StudentName
+        type: string
+    create:
+      function_name: CreateStudent
+      msp: Null
+      # msp:
+      # - student
+    update:
+      function_name: UpdateStudent
+      msp: Null
+      # msp:
+      # - student
+    delete:
+      Null
+      # function_name: DeleteStudent
+      # msp:
+      #   - student
+    inclusion: Null
+    is_inclused: Null
+    dependence:
+      - child_obj_name: certificate
+        child_obj_name_many: certificates
+        field: Certificates
+    is_dependenced: Null
+    owner: Null
+    is_owned: Null
+    match:
+      - des_obj_name: course
+        des_obj_name_many: courses
+        des_field: Students
+        field: Courses
+        add:
+          function_name: StudentResgisterCourse
+          msp: Null
+          # msp:
+          # - student
+        remove:
+          function_name: StudentCancelCourse
+          msp: Null
+          # msp:
+          # - student
+    is_matched: Null
+
+  - name: score
+    name_many: scores
+    properties:
+      - name: Value
+        type: string
+    create:
+      function_name: CreateScore
+      msp: Null
+      # msp:
+      # - academy
+    update:
+      function_name: UpdateScore
+      msp: Null
+      # msp:
+      # - academy
+    delete: Null
+    inclusion: Null
+    is_inclused: Null
+    dependence: Null
+    is_dependenced:
+      - parent_obj_name: class
+        parent_obj_name_many: classes
+        parent_field: Scores
+        field: ClassId
+    is_owned: Null
+    owner: Null
+    match: Null
+    is_matched: Null
+
+  - name: certificate
+    name_many: certificates
+    properties:
+      - name: Type
+        type: string
+    create:
+      function_name: CreateCertificate
+      msp: Null
+      # msp:
+      # - academy
+    update: Null
+    delete: Null
+    inclusion: Null
+    is_inclused: Null
+    dependence: Null
+    is_dependenced:
+      - parent_obj_name: course
+        parent_obj_name_many: courses
+        parent_field: Certificates
+        field: CourseId
+      - parent_obj_name: student
+        parent_obj_name_many: students
+        parent_field: Certificates
+        field: StudentId
+    is_owned: Null
+    owner: Null
+    match: Null
+    is_matched: Null

@@ -1,0 +1,37 @@
+domain: certificate
+
+orgs:
+  - name: academy
+    peer_number: 2
+    peers:
+      - peer: peer0
+        port: 30110
+        event_port: 30111
+      - peer: peer1
+        port: 30210
+        event_port: 30211
+    ca:
+      port: 30054
+      target_port: 7054
+    cpu: 500
+    ram: 500
+    storage: 2
+
+  - name: student
+    peer_number: 2
+    peers:
+      - peer: peer0
+        port: 30310
+        event_port: 30311
+      - peer: peer1
+        port: 30410
+        event_port: 30411
+    ca:
+      port: 30154
+      target_port: 8054
+    cpu: 500
+    ram: 500
+    storage: 2
+
+orderer:
+  port: 31010

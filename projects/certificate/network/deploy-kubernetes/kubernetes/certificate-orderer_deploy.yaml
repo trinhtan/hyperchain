@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certificate-orderer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: certificate-orderer
+  template:
+    metadata:
+      labels:
+        name: certificate-orderer
+    spec:
+      volumes:
+        - name: fabric-certificate-files
+          persistentVolumeClaim:
+            claimName: fabric-certificate-pvc
+        - name: certificate-orderer-files
+          persistentVolumeClaim:
+            claimName: certificate-orderer-pvc
+
+      containers:
+        - name: orderer
+          image: hyperledger/fabric-orderer:1.4.4
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'orderer']
+          env:
+            - name: TZ
+              value: 'America/Sao_Paulo'
+            - name: ORDERER_CFG_PATH
+              value: /fabric/
+            - name: ORDERER_GENERAL_LEDGERTYPE
+              value: file
+            - name: ORDERER_FILELEDGER_LOCATION
+              value: /fabric/ledger/orderer
+            - name: ORDERER_GENERAL_BATCHTIMEOUT
+              value: 1s
+            - name: ORDERER_GENERAL_BATCHSIZE_MAXMESSAGECOUNT
+              value: '10'
+            - name: ORDERER_GENERAL_MAXWINDOWSIZE
+              value: '1000'
+            - name: CONFIGTX_GENERAL_ORDERERTYPE
+              value: 'solo'
+            - name: CONFIGTX_ORDERER_ADDRESSES
+              value: 'certificate-orderer:30006'
+            - name: ORDERER_GENERAL_LISTENADDRESS
+              value: '0.0.0.0'
+            - name: ORDERER_GENERAL_LISTENPORT
+              value: '30006'
+            - name: ORDERER_GENERAL_LOGLEVEL
+              value: 'debug'
+            - name: ORDERER_GENERAL_LOCALMSPDIR
+              value: /fabric/crypto-config/ordererOrganizations/certificate.com/orderers/orderer.certificate.com/msp
+            - name: ORDERER_GENERAL_LOCALMSPID
+              value: OrdererMSP
+            - name: ORDERER_GENERAL_GENESISMETHOD
+              value: file
+            - name: ORDERER_GENERAL_GENESISFILE
+              value: /fabric/genesis.block
+          volumeMounts:
+            - mountPath: /fabric
+              name: fabric-certificate-files
+            - mountPath: /var
+              name: certificate-orderer-files

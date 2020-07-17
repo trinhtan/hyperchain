@@ -1,0 +1,67 @@
+{
+  "name": "network-academy",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Academy",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "certificatechannel": {
+      "orderers": ["certificate-orderer"],
+      "peers": {
+        "certificate-academy-peer0": {}      
+      }
+    }
+  },
+  "organizations": {
+    "Academy": {
+      "mspid": "AcademyMSP",
+      "peers": [
+        "certificate-academy-peer0"      
+			],
+      "certificateAuthorities": ["certificate-academy-ca"]
+    }
+  },
+  "peers": {
+    "certificate-academy-peer0": {
+      "url": "grpc://192.168.99.100:30000",
+      "tlsCACerts": {
+        "pem": "${PEERPEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "192.168.99.100",
+        "hostnameOverride": "192.168.99.100"
+      }
+    } 
+  },
+  "orderers": {
+    "certificate-orderer": {
+      "url": "grpc://192.168.99.100:30006"
+    },
+    "tlsCACerts": {
+      "pem": "${OPEM}"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "192.168.99.100",
+      "hostnameOverride": "192.168.99.100"
+    }
+  },
+  "certificateAuthorities": {
+    "certificate-academy-ca": {
+      "url": "http://192.168.99.100:30004",
+      "caName": "certificate-academy-ca",
+      "tlsCACerts": {
+        "pem": "${CAPEM}"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

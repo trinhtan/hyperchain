@@ -1,0 +1,67 @@
+{
+  "name": "network-student",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Student",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "certificatechannel": {
+      "orderers": ["certificate-orderer"],
+      "peers": {
+        "certificate-student-peer0": {}      
+      }
+    }
+  },
+  "organizations": {
+    "Student": {
+      "mspid": "StudentMSP",
+      "peers": [
+        "certificate-student-peer0"      
+			],
+      "certificateAuthorities": ["certificate-student-ca"]
+    }
+  },
+  "peers": {
+    "certificate-student-peer0": {
+      "url": "grpc://192.168.99.100:30001",
+      "tlsCACerts": {
+        "pem": "${PEERPEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "192.168.99.100",
+        "hostnameOverride": "192.168.99.100"
+      }
+    } 
+  },
+  "orderers": {
+    "certificate-orderer": {
+      "url": "grpc://192.168.99.100:30006"
+    },
+    "tlsCACerts": {
+      "pem": "${OPEM}"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "192.168.99.100",
+      "hostnameOverride": "192.168.99.100"
+    }
+  },
+  "certificateAuthorities": {
+    "certificate-student-ca": {
+      "url": "http://192.168.99.100:30005",
+      "caName": "certificate-student-ca",
+      "tlsCACerts": {
+        "pem": "${CAPEM}"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: certificate-orderer-pv
+  labels:
+    type: local
+    name: certificate-orderer-files
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /nfs/certificate-orderer/var
+    server: storage.local.parisi.biz
+    readOnly: false

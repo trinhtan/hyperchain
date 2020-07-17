@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fabric-edu-tools
+spec:
+  volumes:
+    - name: fabric-edu-files
+      persistentVolumeClaim:
+        claimName: fabric-edu-pvc
+    - name: dockersocket
+      hostPath:
+        path: /var/run/docker.sock
+  containers:
+    - name: fabric-edu-tools
+      image: hyperledger/fabric-tools:1.4.4
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'sleep 48h']
+      env:
+        - name: TZ
+          value: 'America/Sao_Paulo'
+        - name: FABRIC_CFG_PATH
+          value: '/fabric'
+        - name: FABRIC_LOGGING_LEVEL
+          value: debug
+        - name: SYS_CHANNEL
+          value: byfn-sys-channel
+        - name: CHANNEL_NAME
+          value: educhannel
+      volumeMounts:
+        - mountPath: /fabric
+          name: fabric-edu-files
+        - mountPath: /host/var/run/docker.sock
+          name: dockersocket

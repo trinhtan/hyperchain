@@ -1,0 +1,75 @@
+{
+  "name": "network-{{org['name']}}",
+  "version": "1.0.0",
+  "client": {
+    "organization": "{{org['name']|capitalize}}",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "{{data['domain']}}channel": {
+      "orderers": ["{{data['domain']}}-orderer"],
+      "peers": {
+      {% for peer in org['peers'] %}
+        "{{data['domain']}}-{{org['name']}}-{{peer['peer']}}": {{"{}"}}{% if not loop.last %},{% endif %}
+      
+      {% endfor %}
+      }
+    }
+  },
+  "organizations": {
+    "{{org['name']|capitalize}}": {
+      "mspid": "{{org['name']|capitalize}}MSP",
+      "peers": [
+			{% for peer in org['peers'] %}
+        "{{data['domain']}}-{{org['name']}}-{{peer['peer']}}"{% if not loop.last %},{% endif %}
+      
+      {% endfor %}
+			],
+      "certificateAuthorities": ["{{data['domain']}}-{{org['name']}}-ca"]
+    }
+  },
+  "peers": {
+  {% for peer in org['peers'] %}
+    "{{data['domain']}}-{{org['name']}}-{{peer['peer']}}": {
+      "url": "grpc://{{public_ip}}:{{peer['port']}}",
+      "tlsCACerts": {
+        "pem": "${PEERPEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "{{public_ip}}",
+        "hostnameOverride": "{{public_ip}}"
+      }
+    }{% if not loop.last %},{% endif %} 
+  {% endfor %}
+  },
+  "orderers": {
+    "{{data['domain']}}-orderer": {
+      "url": "grpc://{{public_ip}}:{{data['orderer']['port']}}"
+    },
+    "tlsCACerts": {
+      "pem": "${OPEM}"
+    },
+    "grpcOptions": {
+      "ssl-target-name-override": "{{public_ip}}",
+      "hostnameOverride": "{{public_ip}}"
+    }
+  },
+  "certificateAuthorities": {
+    "{{data['domain']}}-{{org['name']}}-ca": {
+      "url": "http://{{public_ip}}:{{org['ca']['port']}}",
+      "caName": "{{data['domain']}}-{{org['name']}}-ca",
+      "tlsCACerts": {
+        "pem": "${CAPEM}"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

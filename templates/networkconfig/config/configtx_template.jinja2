@@ -1,0 +1,127 @@
+---
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/{{data['domain']}}.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+{% for org in data['orgs'] %}
+  - &{{org['name']|capitalize}}
+    Name: {{org['name']|capitalize}}MSP
+    ID: {{org['name']|capitalize}}MSP
+    MSPDir: crypto-config/peerOrganizations/{{org['name']}}.{{data['domain']}}.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('{{org['name']|capitalize}}MSP.admin', '{{org['name']|capitalize}}MSP.peer', '{{org['name']|capitalize}}MSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('{{org['name']|capitalize}}MSP.admin', '{{org['name']|capitalize}}MSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('{{org['name']|capitalize}}MSP.admin')"
+    AnchorPeers:
+      - Host: {{data['domain']}}-{{org['name']}}-peer0
+        Port: {{org['peers'][0]['port']}}
+{% endfor %}
+Capabilities:
+  Channel: &ChannelCapabilities
+    V1_4_3: true
+    V1_3: false
+    V1_1: false
+  Orderer: &OrdererCapabilities
+    V1_4_2: true
+    V1_1: false
+  Application: &ApplicationCapabilities
+    V1_4_2: true
+    V1_3: false
+    V1_2: false
+    V1_1: false
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+  Capabilities:
+    <<: *ApplicationCapabilities
+Orderer: &OrdererDefaults
+  OrdererType: solo
+  Addresses:
+    - {{data['domain']}}-orderer:{{data['orderer']['port']}}
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Kafka:
+    Brokers:
+      - 127.0.0.1:9092
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+  Capabilities:
+    <<: *ChannelCapabilities
+Profiles:
+  TwoOrgsOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+        {% for org in data['orgs']%}
+          - *{{org['name']|capitalize}}
+        {% endfor %}
+  TwoOrgsChannel:
+    Consortium: SampleConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+      {% for org in data['orgs']%}
+        - *{{org['name']|capitalize}}
+      {% endfor %}
+      Capabilities:
+        <<: *ApplicationCapabilities

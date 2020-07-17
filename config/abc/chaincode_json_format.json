@@ -1,0 +1,60 @@
+{
+  "domain": "abc",
+  "objects": [
+    {
+      "name": "thang",
+      "name_many": "thangs",
+      "create": {
+        "msp": [
+          "abc"
+        ],
+        "function_name": "CreateThang"
+      },
+      "update": {
+        "msp": [
+          "abc"
+        ],
+        "function_name": "UpdateThang"
+      },
+      "delete": null,
+      "properties": [
+        {
+          "name": "Thanaf",
+          "type": "string"
+        },
+        {
+          "name": "Ahaha",
+          "type": "string"
+        }
+      ],
+      "inclusion": [],
+      "is_inclused": [],
+      "dependence": [],
+      "is_dependenced": [],
+      "owner": [],
+      "is_owned": [],
+      "match": [],
+      "is_matched": [],
+      "fields": [
+        {
+          "name": "ThangID",
+          "type": "String",
+          "typeRelationship": ""
+        },
+        {
+          "name": "Thanaf",
+          "type": "String",
+          "typeRelationship": "none"
+        },
+        {
+          "name": "Ahaha",
+          "type": "String",
+          "typeRelationship": "none"
+        }
+      ],
+      "relationship": "",
+      "relatedObj": [],
+      "newField": ""
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edu-academy-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edu-academy-ca
+  template:
+    metadata:
+      labels:
+        app: edu-academy-ca
+    spec:
+      volumes:
+        - name: fabric-edu-files
+          persistentVolumeClaim:
+            claimName: fabric-edu-pvc
+      containers:
+        - name: edu-academy-ca
+          image: hyperledger/fabric-ca:1.4.4
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+          		'sh',
+          		'-c',
+              'fabric-ca-server start -b admin:adminpw -d'
+            ]
+          env:
+            - name: TZ
+              value: 'America/Sao_Paulo'
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: 'edu-academy-ca'
+            - name: FABRIC_CA_SERVER_PORT
+              value: '7054'
+            - name: FABRIC_CA_SERVER_DEBUG
+              value: 'true'
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: 'false'
+            - name: FABRIC_CA_SERVER_CA_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/academy.edu.com/ca/ca.academy.edu.com-cert.pem
+            - name: FABRIC_CA_SERVER_CA_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/academy.edu.com/ca/5bf57cb9787f11451afe3718c294d6c8a5abe68e6c527951e0882347ad4425c9_sk
+            - name: FABRIC_CA_SERVER_TLS_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/academy.edu.com/ca/ca.academy.edu.com-cert.pem
+            - name: FABRIC_CA_SERVER_TLS_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/academy.edu.com/ca/5bf57cb9787f11451afe3718c294d6c8a5abe68e6c527951e0882347ad4425c9_sk
+            - name: GODEBUG
+              value: 'netdns=go'
+          volumeMounts:
+            - mountPath: /fabric
+              name: fabric-edu-files

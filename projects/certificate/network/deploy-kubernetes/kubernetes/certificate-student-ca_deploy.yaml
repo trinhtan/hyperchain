@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certificate-student-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: certificate-student-ca
+  template:
+    metadata:
+      labels:
+        app: certificate-student-ca
+    spec:
+      volumes:
+        - name: fabric-certificate-files
+          persistentVolumeClaim:
+            claimName: fabric-certificate-pvc
+      containers:
+        - name: certificate-student-ca
+          image: hyperledger/fabric-ca:1.4.4
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+          		'sh',
+          		'-c',
+              'fabric-ca-server start -b admin:adminpw -d'
+            ]
+          env:
+            - name: TZ
+              value: 'America/Sao_Paulo'
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: 'certificate-student-ca'
+            - name: FABRIC_CA_SERVER_PORT
+              value: '7054'
+            - name: FABRIC_CA_SERVER_DEBUG
+              value: 'true'
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: 'false'
+            - name: FABRIC_CA_SERVER_CA_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/student.certificate.com/ca/ca.student.certificate.com-cert.pem
+            - name: FABRIC_CA_SERVER_CA_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/student.certificate.com/ca/7a00967557776f88a3649fe1657267c0876c2116b8435a4260f9ec7d24dfbbba_sk
+            - name: FABRIC_CA_SERVER_TLS_CERTFILE
+              value: /fabric/crypto-config/peerOrganizations/student.certificate.com/ca/ca.student.certificate.com-cert.pem
+            - name: FABRIC_CA_SERVER_TLS_KEYFILE
+              value: /fabric/crypto-config/peerOrganizations/student.certificate.com/ca/7a00967557776f88a3649fe1657267c0876c2116b8435a4260f9ec7d24dfbbba_sk
+            - name: GODEBUG
+              value: 'netdns=go'
+          volumeMounts:
+            - mountPath: /fabric
+              name: fabric-certificate-files

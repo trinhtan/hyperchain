@@ -1,0 +1,20 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: edu.com
+    Specs:
+      - Hostname: orderer
+PeerOrgs:
+  - Name: Student
+    Domain: student.edu.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+  - Name: Academy
+    Domain: academy.edu.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
