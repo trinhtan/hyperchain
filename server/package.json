@@ -15,7 +15,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@types/connect-busboy": "0.0.2",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "child_process": "^1.0.2",
     "cloudinary": "^1.19.0",
