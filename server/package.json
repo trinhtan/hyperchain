@@ -51,7 +51,7 @@
     "passport-google-oauth20": "^2.0.0",
     "path": "^0.12.7",
     "phone": "^2.4.7",
-    "shelljs": "^0.8.3",
+    "shelljs": "^0.8.5",
     "socket.io": "^2.3.0",
     "supertest": "^4.0.2",
     "uuid": "^3.3.3",
